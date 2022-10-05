@@ -68,8 +68,8 @@ This retrieve the conduit runtime code hash and set it as an immutable.
     {
 ```
 This function deploys a new conduit using a supplied conduit key and assigning an initial owner for the deployed conduit.
-The argument conduitkey it used to deploy the conduit.
-The argument initialOwner is the initial owner to set for the new conduit.
+The parameter conduitkey it used to deploy the conduit.
+The parameter initialOwner is the initial owner to set for the new conduit.
 This function returns the address of the newly deployed conduit.
 ``` solidity
 62. if (initialOwner == address(0)) {
@@ -107,10 +107,77 @@ This derives address from deployer, conduit key and creation code hash.
 ```
 Here if derived conduit exists, aas evidenced by comparing runtime code this should revert with an error indicating that the conduit already exists.
 ``` solidity
- new Conduit{ salt: conduitKey }();
+95.  new Conduit{ salt: conduitKey }();
 ```
 The code above deploys the conduit via CREAT2 using the conduit key as the salt.
 ``` solidity
+98. ConduitProperties storage conduitProperties = _conduits[conduit];
+```
+This initialize storage variable referencing conduit properties.
+``` solidity
+101. conduitProperties.owner = initialOwner;
+```
+This set the supplied initial owner as the owner of the conduit.
+``` solidity
+104. conduitProperties.key = conduitKey;
+```
+This sets conduit key used to deploy the conduit to enable reverse lookup.
+``` solidity
+107. emit NewConduit(conduit, conduitKey);
+```
+Emit an event indicating that the conduit has been deployed.
+```solidity
+ 110. emit OwnershipTransferred(conduit, address(0), initialOwner);
+    }
+```
+Emit an event indicating that conduit ownership has been assigned.
+``` solidity
+ 125. function updateChannel(
+ 126.       address conduit,
+ 127.       address channel,
+ 128.       bool isOpen
+ 129.   ) external override {
+ ```
+ This function opens or closes a channel on a given conduit, therby allowing the specified account to execute transfers against that conduit.
+ Only the owner of the conduit in question may call this function.
+ The parameter conduit signifies the conduit for which to open or close the channel.
+ This parameter channel signifies the channel to open or close on the conduit.
+ this  parameter isOpen takes in a boolean indicating whether to open or close the channel.
+ ``` solidity
+131. _assertCallerIsConduitOwner(conduit);
+This ensures that the caller is the current owner of the conduit in question.
+``` solidity
+134. ConduitInterface(conduit).updateChannel(channel, isOpen);
+```
+This calls the conduit, updating the channel.
+``` solidity
+137. ConduitProperties storage conduitProperties = _conduits[conduit];
+```
+Retrieve storage region where channels for the conduit are tracked.
+``` solidity
+140. uint256 channelIndexPlusOne = (
+141.            conduitProperties.channelIndexesPlusOne[channel]
+142.        );
+```
+Retrieve the index, if one currently exists, for the updated channel.
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
 
 
 
