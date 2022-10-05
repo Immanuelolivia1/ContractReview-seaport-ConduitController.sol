@@ -160,6 +160,73 @@ Retrieve storage region where channels for the conduit are tracked.
 142.        );
 ```
 Retrieve the index, if one currently exists, for the updated channel.
+``` solidity
+145. bool channelPreviouslyOpen = channelIndexPlusOne != 0;
+```
+This determines whether the updated channel is already tracked as open.
+``` solidity
+148. if (isOpen && !channelPreviouslyOpen) {
+```
+An if statement to check that channels has been set to pen and was previously closed
+``` solidity
+150. conduitProperties.channels.push(channel);
+```
+This adds the channel to the channels array for the conduit.
+``` solidity
+153. conduitProperties.channelIndexesPlusOne[channel] = (
+154.                conduitProperties.channels.length
+155.            );
+156.        } else if (!isOpen && channelPreviouslyOpen) {
+```
+The codes on lines 153-156 adds new open channel length to associated mapping as index + 1.
+``` solidity
+uint256 removedChannelIndex;
+```
+This decrements located index to get the index of the closed channel.
+``` solidity
+163. unchecked {
+164.                removedChannelIndex = channelIndexPlusOne - 1;
+165.            }
+```
+This Skips underflow check as channelPreviouslyOpen being true ensures
+that channelIndexPlusOne is not zero.
+```solidity
+168. uint256 finalChannelIndex = conduitProperties.channels.length - 1;
+```
+This uses the length of channels array to determine index of last channel.
+``` solidity
+171. if (finalChannelIndex != removedChannelIndex) {
+173. address finalChannel = (
+174.                    conduitProperties.channels[finalChannelIndex]
+175.               );
+```
+This ensures that if closed channel is not last channel in the channels array the final channel and place the value on the stack is retrieved
+``` solidity
+conduitProperties.channels[removedChannelIndex] = finalChannel;
+```
+This overwrites the removed channel using the final channel value.
+``` solidity
+181. conduitProperties.channelIndexesPlusOne[finalChannel] = (
+182.                    channelIndexPlusOne
+183.                );
+184.           }
+```
+Updates the final index in associated mapping to removed index.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
