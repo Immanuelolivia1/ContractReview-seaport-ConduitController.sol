@@ -225,14 +225,13 @@ conduitProperties.channels.pop();
     }
 ```
 this removes the colsed channel from the asociated mapping of indexes.
-`` solidity
+``` solidity
    
     function transferOwnership(address conduit, address newPotentialOwner)
         external
         override
     {
-    ```
-     /**
+```
 The function above is responsible for initiating conduit ownership transfer by assigning a new potential
 owner for the given conduit. Once set, the new potential owner
 may call `acceptOwnership` to claim ownership of the conduit.
@@ -526,55 +525,64 @@ The parameter conduit signifies the conduit for which to retrieve open channels.
         _assertConduitExists(conduit);
 ```
 Ensures that the conduit in question exists.
-
-        // Retrieve all of the open channels on the conduit in question.
-        channels = _conduits[conduit].channels;
+``` solidity
+ channels = _conduits[conduit].channels;
     }
-
-    /**
-     * @dev Retrieve the conduit creation code and runtime code hashes.
-     */
-    function getConduitCodeHashes()
+```
+Retrieves all of the open channels on the conduit in question.
+``` solidity
+function getConduitCodeHashes()
         external
         view
         override
         returns (bytes32 creationCodeHash, bytes32 runtimeCodeHash)
     {
-        // Retrieve the conduit creation code hash from runtime.
+```    
+A function that retrieves the conduit creation code and runtime code hashes.
+``` solidity
         creationCodeHash = _CONDUIT_CREATION_CODE_HASH;
-
-        // Retrieve the conduit runtime code hash from runtime.
-        runtimeCodeHash = _CONDUIT_RUNTIME_CODE_HASH;
+```
+Retrieves the conduit creation code hash from runtime.
+``` solidity
+  runtimeCodeHash = _CONDUIT_RUNTIME_CODE_HASH;
     }
-
-    /**
-     * @dev Private view function to revert if the caller is not the owner of a
-     *      given conduit.
-     *
-     * @param conduit The conduit for which to assert ownership.
-     */
+```    
+Retrieves the conduit runtime code hash from runtime.
+``` solidity
     function _assertCallerIsConduitOwner(address conduit) private view {
-        // Ensure that the conduit in question exists.
+```
+Above is a private view function to revert if the caller is not the owner of a
+given conduit.
+The parameter conduit signifies the conduit for which to assert ownership.
+``` solidity
         _assertConduitExists(conduit);
-
-        // If the caller does not match the current owner of the conduit...
+```
+Ensures that the conduit in question exists.
+``` solidity
         if (msg.sender != _conduits[conduit].owner) {
-   // Revert, indicating that the caller is not the owner.
-            revert CallerIsNotOwner(conduit);
+```
+If the caller does not match the current owner of the conduit...
+``` solidity
+revert CallerIsNotOwner(conduit);
         }
     }
-
-    /**
-     * @dev Private view function to revert if a given conduit does not exist.
-     *
-     * @param conduit The conduit for which to assert existence.
-     */
+```    
+Revert, indicating that the caller is not the owner.
+``` solidity
     function _assertConduitExists(address conduit) private view {
-        // Attempt to retrieve a conduit key for the conduit in question.
+```
+A private view function to revert if a given conduit does not exist.
+``` solidity
         if (_conduits[conduit].key == bytes32(0)) {
-            // Revert if no conduit key was located.
-            revert NoConduit();
+```
+Attempts to retrieve a conduit key for the conduit in question.
+
+``` solidity
+revert NoConduit();
         }
     }
     
 }    
+```  
+Reverts if no conduit key was located.
+            
