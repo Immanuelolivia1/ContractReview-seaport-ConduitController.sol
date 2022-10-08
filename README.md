@@ -390,18 +390,12 @@ The above if statement reverts if no conduit key was located.
     {
 ```        
 The function above derives the conduit associated with a given conduit key and
-determine whether that conduit exists (i.e. whether it has been deployed) and it 
-returns exist which is a boolean indicating whether the derived conduit has been deployed or not.
-     *
-     * @param conduitKey The conduit key used to derive the conduit.
-     *
-     * @return conduit The derived address of the conduit.
-     * @return exists  A boolean indicating whether the derived conduit has been
-     *                 deployed or not.
-     */
-   
-        // Derive address from deployer, conduit key and creation code hash.
-        conduit = address(
+determine whether that conduit exists (i.e. whether it has been deployed) this function returns 
+conduit which signifies the address derived from the coduit it also returns exist which is a
+boolean indicating whether the derived conduit has been deployed or not.
+The parameter conduitKey is the conduit key used to derive the conduit.
+``` solidity
+ conduit = address(
             uint160(
                 uint256(
                     keccak256(
@@ -415,124 +409,123 @@ returns exist which is a boolean indicating whether the derived conduit has been
                 )
             )
         );
-
-        // Determine whether conduit exists by retrieving its runtime code.
-        exists = (conduit.codehash == _CONDUIT_RUNTIME_CODE_HASH);
+```
+The above line of code derive address from deployer, conduit key and creation code hash.
+``` solidity
+exists = (conduit.codehash == _CONDUIT_RUNTIME_CODE_HASH);
     }
-
-    /**
-     * @notice Retrieve the potential owner, if any, for a given conduit. The
-     *         current owner may set a new potential owner via
-     *         `transferOwnership` and that owner may then accept ownership of
-     *         the conduit in question via `acceptOwnership`.
-     *
-     * @param conduit The conduit for which to retrieve the potential owner.
-     *
-     * @return potentialOwner The potential owner, if any, for the conduit.
-     */
-    function getPotentialOwner(address conduit)
+```    
+Determine whether conduit exists by retrieving its runtime code.
+``` solidity
+ function getPotentialOwner(address conduit)
         external
         view
         override
         returns (address potentialOwner)
     {
-        // Ensure that the conduit in question exists.
+```
+This function retrieves the potential owner, if any, for a given conduit. The
+current owner may set a new potential owner via`transferOwnership` and that 
+owner may then accept ownership of the conduit in question via `acceptOwnership`
+and it returns the potential owner, if any, for the conduit.
+The conduit parameter signifies the conduit for which to retrieve the potential owner.
+``` solidity
         _assertConduitExists(conduit);
-
-        // Retrieve the current potential owner of the conduit in question.
-        potentialOwner = _conduits[conduit].potentialOwner;
+```        
+Ensures that the conduit in question exists.
+``` solidity
+ potentialOwner = _conduits[conduit].potentialOwner;
     }
-
-    /**
-     * @notice Retrieve the status (either open or closed) of a given channel on
-     *         a conduit.
-     *
-     * @param conduit The conduit for which to retrieve the channel status.
-     * @param channel The channel for which to retrieve the status.
-     *
-     * @return isOpen The status of the channel on the given conduit.
-     */
-    function getChannelStatus(address conduit, address channel)
+```    
+Retrieves the current potential owner of the conduit in question.
+``` solidity
+   function getChannelStatus(address conduit, address channel)
         external
         view
         override
         returns (bool isOpen)
-    {
-        // Ensure that the conduit in question exists.
-        _assertConduitExists(conduit);
-
-        // Retrieve the current channel status for the conduit in question.
-        isOpen = _conduits[conduit].channelIndexesPlusOne[channel] != 0;
+    {       
+```
+This function retrieves the status (either open or closed) of a given channel on
+a conduit and it returns the status of thr channel on the given conduit.
+The parameter conduit signifies the conduit for which to retrieve the channel status.
+The parameter channel signifies the channel for which to retrieve the status.
+``` solidity
+ _assertConduitExists(conduit);
+```
+Ensures that the conduit in question exists.
+``` solidity
+  isOpen = _conduits[conduit].channelIndexesPlusOne[channel] != 0;
     }
-
-    /**
-     * @notice Retrieve the total number of open channels for a given conduit.
-     *
-     * @param conduit The conduit for which to retrieve the total channel count.
-     *
-     * @return totalChannels The total number of open channels for the conduit.
-     */
-    function getTotalChannels(address conduit)
+```    
+Retrieves the current channel status for the conduit in question.
+``` solidity
+ function getTotalChannels(address conduit)
         external
         view
         override
         returns (uint256 totalChannels)
     {
-        // Ensure that the conduit in question exists.
+```
+This function retrieves the total number of open channels for a given conduit,
+it returns the total number of open channels for the conduit.
+Here the conduit parameter signifies the conduit for which to retrieve the total channel count.
+``` solidity
         _assertConduitExists(conduit);
-
-        // Retrieve the total open channel count for the conduit in question.
-        totalChannels = _conduits[conduit].channels.length;
+```
+Ensures that the conduit in question exists.
+``` solidity
+totalChannels = _conduits[conduit].channels.length;
     }
-
-    /**
-     * @notice Retrieve an open channel at a specific index for a given conduit.
-     *         Note that the index of a channel can change as a result of other
-     *         channels being closed on the conduit.
-     *
-     * @param conduit      The conduit for which to retrieve the open channel.
-     * @param channelIndex The index of the channel in question.
-     *
-     * @return channel The open channel, if any, at the specified channel index.
-     */
-    function getChannel(address conduit, uint256 channelIndex)
+```   
+Retrieves the total open channel count for the conduit in question.
+``` solidity
+ function getChannel(address conduit, uint256 channelIndex)
         external
         view
         override
         returns (address channel)
     {
-        // Ensure that the conduit in question exists.
+```    
+
+The functoin above retrieves an open channel at a specific index for a given conduit and 
+returns the open channel, if any, at the specified channel index.
+ ``` solidity
         _assertConduitExists(conduit);
-
-        // Retrieve the total open channel count for the conduit in question.
+ ```
+Ensures that the conduit in question exists.
+``` solidity
         uint256 totalChannels = _conduits[conduit].channels.length;
-
-        // Ensure that the supplied index is within range.
-        if (channelIndex >= totalChannels) {
+```
+Retrieves the total open channel count for the conduit in question.
+``` solidity
+if (channelIndex >= totalChannels) {
             revert ChannelOutOfRange(conduit);
         }
-
-        // Retrieve the channel at the given index.
-        channel = _conduits[conduit].channels[channelIndex];
+```        
+Ensures that the supplied index is within range.
+``` solidity
+channel = _conduits[conduit].channels[channelIndex];
     }
-
-    /**
-     * @notice Retrieve all open channels for a given conduit. Note that calling
-     *         this function for a conduit with many channels will revert with
-     *         an out-of-gas error.
-     *
-     * @param conduit The conduit for which to retrieve open channels.
-     *
-     * @return channels An array of open channels on the given conduit.
-     */
-    function getChannels(address conduit)
+```    
+Retrieves the channel at the given index.
+``` solidity
+function getChannels(address conduit)
         external
         view
         override
         returns (address[] memory channels)
     {
-        // Ensure that the conduit in question exists.
+```
+The function above retrieves all open channels for a given conduit. Note that calling
+this function for a conduit with many channels will revert with an out-of-gas error 
+it returns an array of open channels on the given conduit.
+The parameter conduit signifies the conduit for which to retrieve open channels.
+ 
+``` solidity
         _assertConduitExists(conduit);
+```
+Ensures that the conduit in question exists.
 
         // Retrieve all of the open channels on the conduit in question.
         channels = _conduits[conduit].channels;
@@ -585,60 +578,3 @@ returns exist which is a boolean indicating whether the derived conduit has been
     }
     
 }    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-   
-
-
-
-
-
-
-
