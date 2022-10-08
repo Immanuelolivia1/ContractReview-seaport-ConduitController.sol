@@ -196,7 +196,8 @@ that channelIndexPlusOne is not zero.
 This uses the length of channels array to determine index of last channel.
 ``` solidity
 171. if (finalChannelIndex != removedChannelIndex) {
-173. address finalChannel = (
+173. address finalChannel = 
+(
 174.                    conduitProperties.channels[finalChannelIndex]
 175.               );
 ```
@@ -213,6 +214,377 @@ This overwrites the removed channel using the final channel value.
 ```
 Updates the final index in associated mapping to removed index.
 
+``` solidity
+conduitProperties.channels.pop();
+```
+ Remove the last channel from the channels array for the conduit.
+ 
+ ``` solidity
+ delete conduitProperties.channelIndexesPlusOne[channel];
+        }
+    }
+```
+this removes the colsed channel from the asociated mapping of indexes.
+`` solidity
+   
+    function transferOwnership(address conduit, address newPotentialOwner)
+        external
+        override
+    {
+    ```
+     /**
+The function above is responsible for initiating conduit ownership transfer by assigning a new potential
+owner for the given conduit. Once set, the new potential owner
+may call `acceptOwnership` to claim ownership of the conduit.
+Only the owner of the conduit in question may call this function.
+The parameter conduit stands for the conduit for which to initiate ownership transfer.
+The parameter newPotentialOwner stands for the new potential owner of the conduit.
+
+``` solidity  
+ _assertCallerIsConduitOwner(conduit);
+```
+This line of code ensures the caller is the current owner of the conduit in question.
+
+``` solidity
+if (newPotentialOwner == address(0)) {
+            revert NewPotentialOwnerIsZeroAddress(conduit);
+        }
+```
+The above code ensures the new potential owner is not an invalid address.
+``` solidity
+ if (newPotentialOwner == _conduits[conduit].potentialOwner) {
+            revert NewPotentialOwnerAlreadySet(conduit, newPotentialOwner);
+        }
+```
+This ensures the new potential owner is not already set.
+
+``` solidity
+ emit PotentialOwnerUpdated(newPotentialOwner);
+```
+Here an event is emited indicating that the potential owner has been updated.
+``` solidity
+   _conduits[conduit].potentialOwner = newPotentialOwner;
+    }
+```
+This sets the new potential owner as the potential owner of the conduit.
+
+``` solidity
+ function cancelOwnershipTransfer(address conduit) external override {
+ ```
+ This function clears the currently set potential owner, if any, from a conduit.
+ This can only be done by the owner of the conduit in questestion
+ The parameter conduit The conduit for which to cancel ownership transfer.
+
+``` solidity
+        _assertCallerIsConduitOwner(conduit);
+```
+Here its ensured that the caller of this function is the current owner of the conduit in question.
+``` solidity
+        if (_conduits[conduit].potentialOwner == address(0)) {
+            revert NoPotentialOwnerCurrentlySet(conduit);
+        }
+```
+The above line of code ensures that ownership transfer is currently possible.
+
+``` solidity
+ emit PotentialOwnerUpdated(address(0));
+```
+The above line emits an event indicating that the potential owner has been cleared.
+``` solidity
+  _conduits[conduit].potentialOwner = address(0);
+    }
+```
+This Clears the current new potential owner from the conduit.
+
+``` solidity
+    function acceptOwnership(address conduit) external override {
+```
+This function accepts ownership of a supplied conduit. Only accounts that the
+current owner has set as the new potential owner may call this function.
+The  prameter conduit signifies the conduit for which to accept ownership.
+``` solidity
+_assertConduitExists(conduit);
+```
+This ensures that the conduit in question exists.
+``` solidity
+        if (msg.sender != _conduits[conduit].potentialOwner) {
+           revert CallerIsNotNewPotentialOwner(conduit);
+        }
+```
+This checks if caller does not match current potential owner of the conduit,
+it reverts indicating that caller is not current potential owner.
+
+        emit PotentialOwnerUpdated(address(0));
+This emits an event indicating that the potential owner has been cleared.
+``` solidity
+        _conduits[conduit].potentialOwner = address(0);
+```
+This clears the current new potential owner from the conduit.
+``` solidity
+emit OwnershipTransferred(
+            conduit,
+            _conduits[conduit].owner,
+            msg.sender
+        );
+```
+This emits an event indicating conduit ownership has been transferred.
+
+``` solidity
+        _conduits[conduit].owner = msg.sender;
+    }
+```
+This sets the caller as the owner of the conduit.
+``` solidity
+function ownerOf(address conduit)
+        external
+        view
+        override
+        returns (address owner)
+    {
+```
+This function retrieves the current owner of a deployed conduit 
+return owner the owner of the supplied conduit.
+
+The paramerter conduit The conduit for which to retrieve the associated owner.
+``` solidity
+        _assertConduitExists(conduit);
+```
+This ensures that the conduit in question exists.
+
+``` solidity
+owner = _conduits[conduit].owner;
+    }
+```
+This retrieves the current owner of the conduit in question.
+
+``` solidity
+ function getKey(address conduit)
+        external
+        view
+        override
+        returns (bytes32 conduitKey)
+    {
+```
+This function retrieves the conduit key for a deployed conduit via reverse
+lookup, and it returns conduitKey used to deploy the supplied conduit.
+This parameter conduit The conduit for which to retrieve the associated conduit
+key.
+``` solidity
+        conduitKey = _conduits[conduit].key;
+```
+The above line of code attempts to retrieve a conduit key for the conduit in question.
+``` solidity
+if (conduitKey == bytes32(0)) {
+            revert NoConduit();
+        }
+    }
+``` 
+The above if statement reverts if no conduit key was located.
+
+``` solidity
+ function getConduit(bytes32 conduitKey)
+        external
+        view
+        override
+        returns (address conduit, bool exists)
+    {
+```        
+The function above derives the conduit associated with a given conduit key and
+determine whether that conduit exists (i.e. whether it has been deployed) and it 
+returns exist which is a boolean indicating whether the derived conduit has been deployed or not.
+     *
+     * @param conduitKey The conduit key used to derive the conduit.
+     *
+     * @return conduit The derived address of the conduit.
+     * @return exists  A boolean indicating whether the derived conduit has been
+     *                 deployed or not.
+     */
+   
+        // Derive address from deployer, conduit key and creation code hash.
+        conduit = address(
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            bytes1(0xff),
+                            address(this),
+                            conduitKey,
+                            _CONDUIT_CREATION_CODE_HASH
+                        )
+                    )
+                )
+            )
+        );
+
+        // Determine whether conduit exists by retrieving its runtime code.
+        exists = (conduit.codehash == _CONDUIT_RUNTIME_CODE_HASH);
+    }
+
+    /**
+     * @notice Retrieve the potential owner, if any, for a given conduit. The
+     *         current owner may set a new potential owner via
+     *         `transferOwnership` and that owner may then accept ownership of
+     *         the conduit in question via `acceptOwnership`.
+     *
+     * @param conduit The conduit for which to retrieve the potential owner.
+     *
+     * @return potentialOwner The potential owner, if any, for the conduit.
+     */
+    function getPotentialOwner(address conduit)
+        external
+        view
+        override
+        returns (address potentialOwner)
+    {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // Retrieve the current potential owner of the conduit in question.
+        potentialOwner = _conduits[conduit].potentialOwner;
+    }
+
+    /**
+     * @notice Retrieve the status (either open or closed) of a given channel on
+     *         a conduit.
+     *
+     * @param conduit The conduit for which to retrieve the channel status.
+     * @param channel The channel for which to retrieve the status.
+     *
+     * @return isOpen The status of the channel on the given conduit.
+     */
+    function getChannelStatus(address conduit, address channel)
+        external
+        view
+        override
+        returns (bool isOpen)
+    {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // Retrieve the current channel status for the conduit in question.
+        isOpen = _conduits[conduit].channelIndexesPlusOne[channel] != 0;
+    }
+
+    /**
+     * @notice Retrieve the total number of open channels for a given conduit.
+     *
+     * @param conduit The conduit for which to retrieve the total channel count.
+     *
+     * @return totalChannels The total number of open channels for the conduit.
+     */
+    function getTotalChannels(address conduit)
+        external
+        view
+        override
+        returns (uint256 totalChannels)
+    {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // Retrieve the total open channel count for the conduit in question.
+        totalChannels = _conduits[conduit].channels.length;
+    }
+
+    /**
+     * @notice Retrieve an open channel at a specific index for a given conduit.
+     *         Note that the index of a channel can change as a result of other
+     *         channels being closed on the conduit.
+     *
+     * @param conduit      The conduit for which to retrieve the open channel.
+     * @param channelIndex The index of the channel in question.
+     *
+     * @return channel The open channel, if any, at the specified channel index.
+     */
+    function getChannel(address conduit, uint256 channelIndex)
+        external
+        view
+        override
+        returns (address channel)
+    {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // Retrieve the total open channel count for the conduit in question.
+        uint256 totalChannels = _conduits[conduit].channels.length;
+
+        // Ensure that the supplied index is within range.
+        if (channelIndex >= totalChannels) {
+            revert ChannelOutOfRange(conduit);
+        }
+
+        // Retrieve the channel at the given index.
+        channel = _conduits[conduit].channels[channelIndex];
+    }
+
+    /**
+     * @notice Retrieve all open channels for a given conduit. Note that calling
+     *         this function for a conduit with many channels will revert with
+     *         an out-of-gas error.
+     *
+     * @param conduit The conduit for which to retrieve open channels.
+     *
+     * @return channels An array of open channels on the given conduit.
+     */
+    function getChannels(address conduit)
+        external
+        view
+        override
+        returns (address[] memory channels)
+    {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // Retrieve all of the open channels on the conduit in question.
+        channels = _conduits[conduit].channels;
+    }
+
+    /**
+     * @dev Retrieve the conduit creation code and runtime code hashes.
+     */
+    function getConduitCodeHashes()
+        external
+        view
+        override
+        returns (bytes32 creationCodeHash, bytes32 runtimeCodeHash)
+    {
+        // Retrieve the conduit creation code hash from runtime.
+        creationCodeHash = _CONDUIT_CREATION_CODE_HASH;
+
+        // Retrieve the conduit runtime code hash from runtime.
+        runtimeCodeHash = _CONDUIT_RUNTIME_CODE_HASH;
+    }
+
+    /**
+     * @dev Private view function to revert if the caller is not the owner of a
+     *      given conduit.
+     *
+     * @param conduit The conduit for which to assert ownership.
+     */
+    function _assertCallerIsConduitOwner(address conduit) private view {
+        // Ensure that the conduit in question exists.
+        _assertConduitExists(conduit);
+
+        // If the caller does not match the current owner of the conduit...
+        if (msg.sender != _conduits[conduit].owner) {
+   // Revert, indicating that the caller is not the owner.
+            revert CallerIsNotOwner(conduit);
+        }
+    }
+
+    /**
+     * @dev Private view function to revert if a given conduit does not exist.
+     *
+     * @param conduit The conduit for which to assert existence.
+     */
+    function _assertConduitExists(address conduit) private view {
+        // Attempt to retrieve a conduit key for the conduit in question.
+        if (_conduits[conduit].key == bytes32(0)) {
+            // Revert if no conduit key was located.
+            revert NoConduit();
+        }
+    }
+    
+}    
 
 
 
